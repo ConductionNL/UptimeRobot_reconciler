@@ -30,7 +30,6 @@ class UptimeRobotClient:
             "logs": 0,
             "response_times": 0,
             "alert_contacts": 0,
-            "custom_uptime_ratios": "",
         }
         data = self._post("getMonitors", payload)
         raw_monitors = data.get("monitors", [])
