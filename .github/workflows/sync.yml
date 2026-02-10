@@ -1,0 +1,67 @@
+name: Sync UptimeRobot Monitors
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uptimerobot-reconciler-sync
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      SOURCE_REPO: https://github.com/ConductionNL/Nextcloud-base
+      SOURCE_REF: ${{ vars.SOURCE_REF || 'main' }}
+      TENANTS_GLOB: ${{ format('source/{0}', vars.TENANTS_GLOB || 'nextcloud-platform/values/tenants/tenant-*.yaml') }}
+      DOMAIN_BASE: ${{ vars.DOMAIN_BASE || 'commonground.nu' }}
+      HEALTH_PATH: ${{ vars.HEALTH_PATH || '/status.php' }}
+      INTERVAL_SECONDS: ${{ vars.INTERVAL_SECONDS || '60' }}
+      FRIENDLY_PREFIX: ${{ vars.FRIENDLY_PREFIX || '[gitops] nextcloud ' }}
+      DRY_RUN: ${{ (github.event_name == 'pull_request' || github.ref != 'refs/heads/main') && 'true' || (vars.DRY_RUN || 'false') }}
+      UPTIMEROBOT_API_KEY: ${{ secrets.UPTIMEROBOT_API_KEY }}
+    steps:
+      - name: Checkout reconciler repository
+        uses: actions/checkout@v4
+
+      - name: Validate required configuration
+        run: |
+          if [ -z "${UPTIMEROBOT_API_KEY}" ]; then
+            echo "UPTIMEROBOT_API_KEY secret is required."
+            exit 1
+          fi
+
+      - name: Normalize source repository for checkout
+        run: |
+          slug="${SOURCE_REPO%/}"
+          slug="${slug#https://github.com/}"
+          slug="${slug#http://github.com/}"
+          echo "SOURCE_REPO_SLUG=${slug}" >> "${GITHUB_ENV}"
+
+      - name: Checkout source tenants repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.SOURCE_REPO_SLUG }}
+          ref: ${{ env.SOURCE_REF }}
+          path: source
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Reconcile monitors
+        run: python src/sync_uptimerobot.py
