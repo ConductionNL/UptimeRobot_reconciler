@@ -19,7 +19,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      SOURCE_REPO: https://github.com/ConductionNL/Nextcloud-base
+      SOURCE_REPO: https://codeberg.org/Conduction/Nextcloud-base
       SOURCE_REF: ${{ vars.SOURCE_REF || 'main' }}
       TENANTS_GLOB: ${{ format('source/{0}', vars.TENANTS_GLOB || 'nextcloud-platform/values/tenants/tenant-*.yaml') }}
       DOMAIN_BASE: ${{ vars.DOMAIN_BASE || 'commonground.nu' }}
