@@ -19,7 +19,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      SOURCE_REPO: https://codeberg.org/Conduction/Nextcloud-base
+      SOURCE_REPO: https://codeberg.org/conduction/Nextcloud-base
       SOURCE_REF: ${{ vars.SOURCE_REF || 'main' }}
       TENANTS_GLOB: ${{ format('source/{0}', vars.TENANTS_GLOB || 'nextcloud-platform/values/tenants/tenant-*.yaml') }}
       DOMAIN_BASE: ${{ vars.DOMAIN_BASE || 'commonground.nu' }}
@@ -39,19 +39,10 @@ jobs:
             exit 1
           fi
 
-      - name: Normalize source repository for checkout
-        run: |
-          slug="${SOURCE_REPO%/}"
-          slug="${slug#https://github.com/}"
-          slug="${slug#http://github.com/}"
-          echo "SOURCE_REPO_SLUG=${slug}" >> "${GITHUB_ENV}"
-
-      - name: Checkout source tenants repository
-        uses: actions/checkout@v4
-        with:
-          repository: ${{ env.SOURCE_REPO_SLUG }}
-          ref: ${{ env.SOURCE_REF }}
-          path: source
+      # Source is on Codeberg, not GitHub — actions/checkout can only fetch GitHub
+      # repos, so clone the public Codeberg repo with plain git (no creds needed).
+      - name: Clone source tenants repository (Codeberg)
+        run: git clone --depth 1 --branch "${SOURCE_REF}" "${SOURCE_REPO}" source
 
       - name: Set up Python
         uses: actions/setup-python@v5

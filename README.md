@@ -34,7 +34,10 @@ Hierdoor kan de reconciler nooit per ongeluk monitors verwijderen die niet door 
 
 ### Repository variables
 
-- `SOURCE_REPO` is standaard vastgezet op `https://github.com/ConductionNL/Nextcloud-base`
+- `SOURCE_REPO` is standaard vastgezet op `https://codeberg.org/conduction/Nextcloud-base`
+  (Codeberg; cloned met plain `git clone` omdat `actions/checkout` alleen GitHub-repos kan ophalen).
+  Alleen **`-accept` en `-prod`** tenants worden gemonitord (test/demo overgeslagen); `tenant.hostname`
+  overrides worden gehonoreerd.
 - `SOURCE_REF` (optioneel, default `main`)
 - `TENANTS_GLOB` (optioneel, default `nextcloud-platform/values/tenants/tenant-*.yaml`)
 - `DOMAIN_BASE` (optioneel, default `commonground.nu`)
@@ -71,7 +74,7 @@ export UPTIMEROBOT_API_KEY=xxxx
 ```
 
 `SOURCE_REPO` hoeft lokaal niet gezet te worden tenzij je wilt overriden; default is:
-`https://github.com/ConductionNL/Nextcloud-base`.
+`https://codeberg.org/conduction/Nextcloud-base`.
 
 Voor lokaal testen met een geclonede bronrepo kun je bijvoorbeeld:
 
