@@ -52,6 +52,7 @@ def main() -> int:
     updated = 0
     deleted = 0
     unchanged = 0
+    skipped = 0
 
     for friendly_name, desired in sorted(desired_by_name.items()):
         current = managed_existing.get(friendly_name)
@@ -65,6 +66,16 @@ def main() -> int:
                         interval=desired.interval,
                     )
                 except UptimeRobotApiError as exc:
+                    # A duplicate (same URL already monitored — e.g. two tenant
+                    # files resolve to the same host) is non-fatal: warn and move
+                    # on instead of aborting the whole reconcile.
+                    if "duplicate" in str(exc).lower():
+                        print(
+                            f"SKIP {friendly_name}: monitor for {desired.url} already exists",
+                            file=sys.stderr,
+                        )
+                        skipped += 1
+                        continue
                     print(
                         f"ERROR: failed to create '{friendly_name}': {exc}",
                         file=sys.stderr,
@@ -114,7 +125,8 @@ def main() -> int:
 
     print(
         "Summary: "
-        f"created={created}, updated={updated}, deleted={deleted}, unchanged={unchanged}"
+        f"created={created}, updated={updated}, deleted={deleted}, "
+        f"unchanged={unchanged}, skipped={skipped}"
     )
     return 0
 
